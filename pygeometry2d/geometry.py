@@ -48,7 +48,7 @@ class XY:
         self._y = y
 
     def __repr__(self) -> str:
-        return f"[{round(self.x, _geom_precision)}, {round(self.y, _geom_precision)}]"
+        return f"({round(self.x, _geom_precision)}, {round(self.y, _geom_precision)})"
 
     def __add__(self, other_point: XY) -> XY:
         return XY(self.x + other_point.x, self.y + other_point.y)
@@ -205,7 +205,7 @@ class BoundingBox:
         self.vertices = [XY(min_point.x, max_point.y), max_point, XY(max_point.x, min_point.y), min_point]
 
     def __repr__(self) -> str:
-        return f"[{self.min}, {self.max}]"
+        return f"BoundingBox({self.min}, {self.max})"
 
     def to_outline(self) -> Line:
         """Converts the bounding box to a line representing its outline.
@@ -235,7 +235,7 @@ class Arc:
         self.end_angle = end_angle #radians
 
     def __repr__(self) -> str:
-        return f"({self.center}, {self.radius}, {self.start_angle}, {self.end_angle})"
+        return f"Arc({self.center}, {self.radius}, {self.start_angle}, {self.end_angle})"
 
     @property
     def diameter(self) -> float:
@@ -328,7 +328,7 @@ class Circle(Arc):
         super().__init__(center, diameter / 2, 0, math.pi * 2)
 
     def __repr__(self) -> str:
-        return f"({self.center}, {self.diameter})"
+        return f"Circle({self.center}, {self.diameter})"
 
 
 class Line:
@@ -372,7 +372,7 @@ class Line:
         self.is_unbound = is_unbound
 
     def __repr__(self) -> str:
-        return f"[{round(self.start.x, _geom_precision)}, {round(self.start.y, _geom_precision)}, {round(self.end.x, _geom_precision)}, {round(self.end.y, _geom_precision)}]"
+        return f"Line({self.start}, {self.end})"
 
     @property
     def mid(self) -> XY:
@@ -656,6 +656,9 @@ class Polyline:
     def __init__(self, points: List[XY]):
         self.points: List[XY] = points
 
+    def __repr__(self) -> str:
+        return f"Polyline({self.points})"
+
     def __getitem__(self, index: int) -> XY:
         return self.points[index]
 
@@ -813,7 +816,7 @@ class Polyline:
         return Polyline(self.points + [self.points[0]])
 
     def scaled(self, scale_factor: float, scale_point: Optional[XY] = None) -> Polyline:
-        """Scales the polyline by a given factor.
+        """Returns a scaled copy of the polyline by a given factor.
 
         Args:
             scale_factor (float): The scaling factor.
@@ -1025,6 +1028,9 @@ class Rectangle(Polyline):
         super().__init__([XY(x1, y1), XY(x2, y1), XY(x2, y2), XY(x1, y2), XY(x1, y1)])
         self.min_corner = XY(x1, y1)
         self.max_corner = XY(x2, y2)
+
+    def __repr__(self) -> str:
+        return f"Rectangle({self.min_corner}, {self.max_corner})"
 
     @property
     def center(self) -> XY:
@@ -1295,7 +1301,7 @@ class GeomUtils:
 
     @staticmethod
     def arc_by_3_points(point1: XY, point2: XY, point3: XY) -> Optional[Tuple[XY, float, float, float]]:
-        """Computes the arc passing through three points.
+        """Computes the arc passing through three points. The points must be in order.
 
         Args:
             point1 (XY): The first point.
@@ -1309,3 +1315,4 @@ class GeomUtils:
         if math.sin((point3 - point1).angle - (point2 - point1).angle) < 0:
             point1, point3 = point3, point1
         return (center, radius, (point1 - center).angle, (point3 - center).angle)
+    
