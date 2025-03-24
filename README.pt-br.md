@@ -55,7 +55,7 @@ polyline = Polyline([XY(0, 0), XY(3, 4), XY(6, 0)])
 print(polyline.length)  # Comprimento total da polyline
 ```
 
-## Documentation
+## Documentação
 
 A documentação completa está disponível em [readthedocs](https://pygeometry2d.readthedocs.io/).
 
