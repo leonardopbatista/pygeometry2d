@@ -2,6 +2,8 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/leonardopbatista/pygeometry2d/blob/master/README.md)
 [![pt-br](https://img.shields.io/badge/lang-pt--br-green.svg)](https://github.com/leonardopbatista/pygeometry2d/blob/master/README.pt-br.md)
 
+[![Documentation Status](https://readthedocs.org/projects/pygeometry2d/badge/?version=latest)](https://pygeometry2d.readthedocs.io/)
+
 This is a lightweight and simple library for handling 2D geometries using only Python's native libraries. It allows performing common geometric operations such as distance calculations, intersections, rotations, and other geometric transformations.
 
 ## Main Features
