@@ -11,7 +11,7 @@ This is a lightweight and simple library for handling 2D geometries using only P
 - Support for arcs (`Arc`) and circles (`Circle`).
 - Bounding box generation (`BoundingBox`).
 - Handling polylines (`Polyline`) and rectangles (`Rectangle`).
-- Geometric utilities such as angle normalization, orthogonality checking, and shape intersections.
+- Geometric utilities such as angle normalization, orthogonality checking, shape intersections and polyline optimization.
 
 ## Installation
 
@@ -27,38 +27,107 @@ Then, import it into your project:
 from pygeometry2d import XY, Line, Circle, Polyline
 ```
 
-## Usage Examples
+## Basic Usage
 
-### Creating and Manipulating Points
-
+### Create points and lines
 ```python
-p1 = XY(3, 4)
-p2 = XY(6, 8)
-distance = p1.distance(p2)
-print(distance)  # 5.0
+from pygeometry2d import XY, Line
+
+p1 = XY(0, 0)
+p2 = XY(4, 4)
+line = Line(p1, p2)
+print(line.length)  # 5.65685
 ```
 
-### Creating and Manipulating Lines
+## Examples
 
+### Join disordered connected segments into polylines
 ```python
-line = Line(XY(0, 0), XY(3, 4))
-print(line.length)  # Line length
+from pygeometry2d import XY, Line, GeomUtils
+
+segments = [
+    Line(XY(1, 0), XY(2, 0)),
+    Line(XY(10, 10), XY(11, 10)),
+    Line(XY(0, 0), XY(1, 0)),
+    Line(XY(2, 0), XY(3, 5))
+]
+
+joined_polylines = GeomUtils.join(segments)
+for polyline in joined_polylines:
+    print(polyline.points)
 ```
 
-### Creating a Circle and Checking Intersections
-
-```python
-circle = Circle(XY(0, 0), 10)
-line = Line(XY(-10, 0), XY(10, 0))
-intersections = circle.intersection(line)
-print(intersections)  # List of intersection points
+**Output:**
+```
+[(10, 10), (11, 10)]
+[(0, 0), (1, 0), (2, 0), (3, 5)]
 ```
 
-### Working with Polylines
-
+### Find circle passing through three points
 ```python
-polyline = Polyline([XY(0, 0), XY(3, 4), XY(6, 0)])
-print(polyline.length)  # Total polyline length
+from pygeometry2d import XY, GeomUtils
+
+p1 = XY(0, 1)
+p2 = XY(1, 0)
+p3 = XY(2, 1)
+
+center, radius = GeomUtils.circle_by_3_points(p1, p2, p3)
+print(f"Center: {center}, Radius: {radius}")
+```
+
+**Output:**
+```
+Center: (1.0, 1.0), Radius: 1.0
+```
+
+### Optimize connected line segments
+```python
+from pygeometry2d import XY, Line, GeomUtils
+
+segments = [
+    Line(XY(0, 0), XY(1, 0)),
+    Line(XY(2, 0), XY(3, 0)),
+    Line(XY(1, 0), XY(2, 0)),
+]
+
+optimized = GeomUtils.optimize_segments(segments)
+for line in optimized:
+    print(line.start, line.end)
+```
+
+**Output:**
+```
+(0,0) (3,0)
+```
+
+### Find intersection between two lines
+```python
+from pygeometry2d import XY, Line
+
+line1 = Line(XY(0, 0), XY(1, 1))
+line2 = Line(XY(0, 1), XY(1, 0))
+
+intersection = line1.intersection(line2)
+print(intersection)
+```
+
+**Output:**
+```
+(0.5, 0.5)
+```
+
+### Get the general equation of a line (Ax + By + C = 0)
+```python
+from pygeometry2d import XY, Line
+
+line = Line(XY(0, 0), XY(2, 2))
+a, b, c = line.general_equation_coefficients
+print(f"{a}x + {b}y + {c} = 0")
+```
+
+**Output:**
+```
+1x + -1.0y + 0.0 = 0
 ```
 
 ## Documentation

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import math
-from typing import Any, List, Tuple, Optional, Union, Generator, Dict
+from typing import Any, Generator
 from contextlib import contextmanager
 
 # Tolerance for handling floating-point inaccuracies
@@ -177,12 +177,12 @@ class XY:
         """
         return XY(-self.y, self.x)
 
-    def rotate(self, angle: float, center: Optional[XY] = None) -> XY:
+    def rotate(self, angle: float, center: XY | None = None) -> XY:
         """Rotates the point around a center by a given angle.
 
         Args:
             angle (float): The angle in radians.
-            center (Optional[XY]): The center of rotation. Defaults to the origin.
+            center (XY | None): The center of rotation. Defaults to the origin.
 
         Returns:
             XY: The rotated point.
@@ -245,14 +245,14 @@ class Arc:
     def length(self) -> float:
         return abs(self.end_angle - self.start_angle) * self.radius
 
-    def discretize(self, number_of_segments: int) -> List[XY]:
+    def discretize(self, number_of_segments: int) -> list[XY]:
         """Discretizes the arc into a list of points.
 
         Args:
             number_of_segments (int): The number of segments to divide the arc into.
 
         Returns:
-            List[XY]: The list of points representing the arc.
+            list[XY]: The list of points representing the arc.
         """
         segment_angle = (self.end_angle - self.start_angle) / number_of_segments
 
@@ -280,14 +280,14 @@ class Arc:
 
         return self.start_angle <= angle <= self.end_angle or self.start_angle <= angle + 2 * math.pi <= self.end_angle
 
-    def intersection(self, line: Line) -> List[XY]:
+    def intersection(self, line: Line) -> list[XY]:
         """Finds the intersection points between the arc and a line.
 
         Args:
             line (Line): The line to intersect with.
 
         Returns:
-            List[XY]: The list of intersection points.
+            list[XY]: The list of intersection points.
         """
         if line.distance(self.center) > self.radius + _geom_fuzz:
             return []
@@ -352,14 +352,14 @@ class Line:
         """
         return Line(0, 0, 0, 1, is_unbound=True)
 
-    def __init__(self, x0: Union[float, XY], y0: Union[float, XY], x1: Optional[float] = None, y1: Optional[float] = None, is_unbound: bool = False):
+    def __init__(self, x0: float | XY, y0: float | XY, x1: float | None = None, y1: float | None = None, is_unbound: bool = False):
         """Initializes the line.
 
         Args:
-            x0 (Union[float, XY]): The x-coordinate of the start point or the start point itself.
-            y0 (Union[float, XY]): The y-coordinate of the start point or the end point if x0 is a point.
-            x1 (Optional[float]): The x-coordinate of the end point. Required if x0 and y0 are floats.
-            y1 (Optional[float]): The y-coordinate of the end point. Required if x0 and y0 are floats.
+            x0 (float | XY): The x-coordinate of the start point or the start point itself.
+            y0 (float | XY): The y-coordinate of the start point or the end point if x0 is a point.
+            x1 (float | None): The x-coordinate of the end point. Required if x0 and y0 are floats.
+            y1 (float | None): The y-coordinate of the end point. Required if x0 and y0 are floats.
             is_unbound (bool): Whether the line is infinite. Defaults to False.
         """
         if x1 is not None and y1 is not None:
@@ -438,11 +438,11 @@ class Line:
         return self.is_horizontal or self.is_vertical
 
     @property
-    def general_equation_coefficients(self) -> Tuple[float, float, float]:
+    def general_equation_coefficients(self) -> tuple[float, float, float]:
         """Returns the coefficients of the general equation of the line (Ax + By + C = 0).
 
         Returns:
-            Tuple[float, float, float]: The coefficients (A, B, C).
+            tuple[float, float, float]: The coefficients (A, B, C).
         """
         a = self.end.y - self.start.y
         b = self.start.x - self.end.x
@@ -450,11 +450,11 @@ class Line:
         return (1, b / a, c / a) if round(a, _geom_precision) != 0 else (a / b, 1, c / b)
 
     @property
-    def reduced_equation_coefficients(self) -> Tuple[float, float]:
+    def reduced_equation_coefficients(self) -> tuple[float, float]:
         """Returns the coefficients of the reduced equation of the line (y = mx + b).
 
         Returns:
-            Tuple[float, float]: The coefficients (m, b).
+            tuple[float, float]: The coefficients (m, b).
         """
         angular_coefficient = (self.end.y - self.start.y) / (self.end.x - self.start.x)
         y_intercept = self.start.y - angular_coefficient * self.start.x
@@ -472,11 +472,11 @@ class Line:
         return abs((self.end.x - self.start.x) * (self.start.y - point.y) - (self.end.y - self.start.y) * (self.start.x - point.x)) \
             / ((self.end.x - self.start.x)**2 + (self.end.y - self.start.y)**2)**(1 / 2)
 
-    def has_same_direction(self, other: Union[XY, Line, Any]) -> bool:
+    def has_same_direction(self, other: XY | Line | Any) -> bool:
         """Checks if the line has the same direction as another line or vector.
 
         Args:
-            other (Union[XY, Line, Any]): The other line or vector.
+            other (XY | Line | Any): The other line or vector.
 
         Returns:
             bool: True if the directions are the same, False otherwise.
@@ -514,7 +514,7 @@ class Line:
         offset_vector = (self.end - self.start).normalize().perpendicular() * offset
         return Line(self.start + offset_vector, self.end + offset_vector)
 
-    def intersection(self, other_line: Line, extend_segments_to_infinity: bool = False) -> Optional[XY]:
+    def intersection(self, other_line: Line, extend_segments_to_infinity: bool = False) -> XY | None:
         """Finds the intersection point between two lines.
 
         Args:
@@ -522,7 +522,7 @@ class Line:
             extend_segments_to_infinity (bool): Whether to treat the lines as infinite. Defaults to False.
 
         Returns:
-            Optional[XY]: The intersection point, or None if no intersection exists.
+            XY | None: The intersection point, or None if no intersection exists.
         """
         a, b, c = self.general_equation_coefficients
         d, e, f = other_line.general_equation_coefficients
@@ -544,14 +544,14 @@ class Line:
 
         return intersection_point
 
-    def discretize(self, number_of_segments: int) -> List[XY]:
+    def discretize(self, number_of_segments: int) -> list[XY]:
         """Discretizes the line into a list of points.
 
         Args:
             number_of_segments (int): The number of segments to divide the line into.
 
         Returns:
-            List[XY]: The list of points representing the line.
+            list[XY]: The list of points representing the line.
         """
         segment_vector = (self.end - self.start).normalize() * (self.length / number_of_segments)
 
@@ -587,11 +587,11 @@ class Line:
         else:
             return Line(self.start, self.end, is_unbound=self.is_unbound)
 
-    def to_points(self) -> List[XY]:
+    def to_points(self) -> list[XY]:
         """Returns the start and end points of the line.
 
         Returns:
-            List[XY]: The start and end points.
+            list[XY]: The start and end points.
         """
         return [self.start, self.end]
 
@@ -653,8 +653,8 @@ class Line:
 class Polyline:
     """A class representing a polyline, which is a sequence of connected line segments."""
 
-    def __init__(self, points: List[XY]):
-        self.points: List[XY] = points
+    def __init__(self, points: list[XY]):
+        self.points: list[XY] = points
 
     def __repr__(self) -> str:
         return f"Polyline({self.points})"
@@ -815,12 +815,12 @@ class Polyline:
             return self.copy()
         return Polyline(self.points + [self.points[0]])
 
-    def scaled(self, scale_factor: float, scale_point: Optional[XY] = None) -> Polyline:
+    def scaled(self, scale_factor: float, scale_point: XY | None = None) -> Polyline:
         """Returns a scaled copy of the polyline by a given factor.
 
         Args:
             scale_factor (float): The scaling factor.
-            scale_point (Optional[XY]): The point to scale around. Defaults to the origin.
+            scale_point (XY | None): The point to scale around. Defaults to the origin.
 
         Returns:
             Polyline: The scaled polyline.
@@ -828,19 +828,19 @@ class Polyline:
         scale_point = scale_point or XY.zero()
         return Polyline([scale_point + (point - scale_point) * scale_factor for point in self.points])
 
-    def to_segments(self) -> List[Line]:
+    def to_segments(self) -> list[Line]:
         """Converts the polyline to a list of line segments.
 
         Returns:
-            List[Line]: The list of line segments.
+            list[Line]: The list of line segments.
         """
         return [Line(self.points[i], self.points[i + 1]) for i in range(self.num_points - 1)]
 
-    def to_points(self) -> List[XY]:
+    def to_points(self) -> list[XY]:
         """Returns a copy of the points in the polyline.
 
         Returns:
-            List[XY]: The list of points.
+            list[XY]: The list of points.
         """
         return self.points.copy()
 
@@ -879,11 +879,11 @@ class Polyline:
             p1x, p1y = p2x, p2y
         return inside
 
-    def join(self, line: Union[Line, Polyline]) -> Polyline:
+    def join(self, line: Line | Polyline) -> Polyline:
         """Joins the polyline with another line or polyline. If the ends do not match, return the polyline without modification.
 
         Args:
-            line (Union[Line, Polyline]): The line or polyline to join with.
+            line (Line | Polyline): The line or polyline to join with.
 
         Returns:
             Polyline: The joined polyline.
@@ -898,14 +898,14 @@ class Polyline:
             self.points = self.to_points()[:-1] + line.reversed().to_points()
         return self
 
-    def intersection(self, geometry_object: Union[Line, Polyline, Arc]) -> List[XY]:
+    def intersection(self, geometry_object: Line | Polyline | Arc) -> list[XY]:
         """Finds the intersection points between the polyline and another geometry object.
 
         Args:
-            geometry_object (Union[Line, Polyline, Arc]): The geometry object to intersect with.
+            geometry_object (Line | Polyline | Arc): The geometry object to intersect with.
 
         Returns:
-            List[XY]: The list of intersection points.
+            list[XY]: The list of intersection points.
         """
         if isinstance(geometry_object, (Line, Arc)):
             return list({intersection for segment in self.to_segments() if (intersection := geometry_object.intersection(segment))})
@@ -966,15 +966,15 @@ class Polyline:
 
         return Polyline(offset_points)
 
-    def enclosing_polyline(self, offset: float, end_point_offset: Optional[float] = None) -> Optional[Polyline]:
+    def enclosing_polyline(self, offset: float, end_point_offset: float | None = None) -> Polyline | None:
         """Returns a polyline that encloses the original polyline with a given offset.
 
         Args:
             offset (float): The offset distance.
-            end_point_offset (Optional[float]): The offset for the end points. Defaults to the main offset.
+            end_point_offset (float | None): The offset for the end points. Defaults to the main offset.
 
         Returns:
-            Optional[Polyline]: The enclosing polyline, or None if the polyline has fewer than 2 points.
+            Polyline | None: The enclosing polyline, or None if the polyline has fewer than 2 points.
         """
         if self.num_points < 2:
             return None
@@ -1036,7 +1036,7 @@ class Rectangle(Polyline):
     def center(self) -> XY:
         return (self.max_corner + self.min_corner) / 2
 
-    def discretize(self, horizontal_partitions: int, vertical_partitions: int) -> List[Rectangle]:
+    def discretize(self, horizontal_partitions: int, vertical_partitions: int) -> list[Rectangle]:
         """Discretizes the rectangle into smaller rectangles.
 
         Args:
@@ -1044,7 +1044,7 @@ class Rectangle(Polyline):
             vertical_partitions (int): The number of vertical partitions.
 
         Returns:
-            List[Rectangle]: The list of smaller rectangles.
+            list[Rectangle]: The list of smaller rectangles.
         """
         h_size = (self.max_corner.x - self.min_corner.x) / horizontal_partitions
         v_size = (self.max_corner.y - self.min_corner.y) / vertical_partitions
@@ -1169,16 +1169,16 @@ class GeomUtils:
         return angle * math.pi / 180
 
     @staticmethod
-    def optimize_segments(segments: List[Line]) -> List[Line]:
+    def optimize_segments(segments: list[Line]) -> list[Line]:
         """Optimizes a list of line segments by merging consecutive segments.
 
         Args:
-            segments (List[Line]): The list of line segments.
+            segments (list[Line]): The list of line segments.
 
         Returns:
-            List[Line]: The optimized list of line segments.
+            list[Line]: The optimized list of line segments.
         """
-        def _optimize_segment(seg: Line, seg_list: List[Line], coefs: Tuple[float, float, float]) -> Line:
+        def _optimize_segment(seg: Line, seg_list: list[Line], coefs: tuple[float, float, float]) -> Line:
             if not seg_list:
                 return seg
             elif (coefs[1] != 0 and seg.end.x + _geom_fuzz >= seg_list[0].start.x) or (coefs[1] == 0 and seg.end.y + _geom_fuzz >= seg_list[0].start.y):
@@ -1188,11 +1188,11 @@ class GeomUtils:
             return seg
 
         segments = [segment.to_readable_direction() for segment in segments if segment.start != segment.end]
-        segment_dict: Dict[Tuple[float, float, float], List[Line]] = {coeficients: [] for coeficients in {tuple(round(coef, _geom_precision) for coef in segment.general_equation_coefficients) for segment in segments}}
+        segment_dict: dict[tuple[float, float, float], list[Line]] = {coeficients: [] for coeficients in {tuple(round(coef, _geom_precision) for coef in segment.general_equation_coefficients) for segment in segments}}
         for segment in segments:
             segment_dict[tuple(round(coef, _geom_precision) for coef in segment.general_equation_coefficients)].append(segment)
 
-        optimized_segments: List[Line] = []
+        optimized_segments: list[Line] = []
         for coefs, seg_list in segment_dict.items():
             seg_list = sorted(seg_list, key=lambda seg: seg.start.x if coefs[1] != 0 else seg.start.y)
             while seg_list:
@@ -1201,16 +1201,16 @@ class GeomUtils:
         return optimized_segments
 
     @staticmethod
-    def join(lines: List[Union[Polyline, Line]]) -> List[Polyline]:
+    def join(lines: list[Polyline | Line]) -> list[Polyline]:
         """Joins a list of polylines and lines into a list of connected polylines.
 
         Args:
-            lines (List[Union[Polyline, Line]]): The list of polylines and lines.
+            lines (list[Polyline | Line]): The list of polylines and lines.
 
         Returns:
-            List[Polyline]: The list of connected polylines.
+            list[Polyline]: The list of connected polylines.
         """
-        def _find_and_join(pl: Polyline, polyline_dict: Dict[XY, List[Polyline]]) -> Polyline:
+        def _find_and_join(pl: Polyline, polyline_dict: dict[XY, list[Polyline]]) -> Polyline:
             if (match_polyline := polyline_dict.get(pl.start)) or (match_polyline := polyline_dict.get(pl.end)):
                 match_polyline = match_polyline[0]
                 pl.join(match_polyline)
@@ -1245,11 +1245,11 @@ class GeomUtils:
         return joined_polylines
 
     @staticmethod
-    def boundary(points: List[XY]) -> Polyline:
+    def boundary(points: list[XY]) -> Polyline:
         """Computes the convex hull of a set of points.
 
         Args:
-            points (List[XY]): The list of points.
+            points (list[XY]): The list of points.
 
         Returns:
             Polyline: The convex hull as a polyline.
@@ -1265,11 +1265,11 @@ class GeomUtils:
         return Polyline(below + above).closed()
 
     @staticmethod
-    def get_min_max_point(point_list: List[XY]) -> BoundingBox:
+    def get_min_max_point(point_list: list[XY]) -> BoundingBox:
         """Computes the bounding box of a list of points.
 
         Args:
-            point_list (List[XY]): The list of points.
+            point_list (list[XY]): The list of points.
 
         Returns:
             BoundingBox: The bounding box.
@@ -1279,7 +1279,7 @@ class GeomUtils:
         return BoundingBox(min_point, max_point)
 
     @staticmethod
-    def circle_by_3_points(point1: XY, point2: XY, point3: XY) -> Optional[Tuple[XY, float]]:
+    def circle_by_3_points(point1: XY, point2: XY, point3: XY) -> tuple[XY, float] | None:
         """Computes the circle passing through three points.
 
         Args:
@@ -1288,7 +1288,7 @@ class GeomUtils:
             point3 (XY): The third point.
 
         Returns:
-            Optional[Tuple[XY, float]]: The center and radius of the circle, or None if the points are collinear.
+            tuple[XY, float] | None: The center and radius of the circle, or None if the points are collinear.
         """
         mid1 = XY.mid(point1, point2)
         mid2 = XY.mid(point2, point3)
@@ -1300,7 +1300,7 @@ class GeomUtils:
         return (center, point1.distance(center)) if center else None
 
     @staticmethod
-    def arc_by_3_points(point1: XY, point2: XY, point3: XY) -> Optional[Tuple[XY, float, float, float]]:
+    def arc_by_3_points(point1: XY, point2: XY, point3: XY) -> tuple[XY, float, float, float] | None:
         """Computes the arc passing through three points. The points must be in order.
 
         Args:
@@ -1309,7 +1309,7 @@ class GeomUtils:
             point3 (XY): The third point.
 
         Returns:
-            Optional[Tuple[XY, float, float, float]]: The center, radius, start angle, and end angle of the arc, or None if the points are collinear.
+            tuple[XY, float, float, float] | None: The center, radius, start angle, and end angle of the arc, or None if the points are collinear.
         """
         center, radius = GeomUtils.circle_by_3_points(point1, point2, point3)
         if math.sin((point3 - point1).angle - (point2 - point1).angle) < 0:
