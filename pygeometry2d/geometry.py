@@ -223,7 +223,18 @@ class BoundingBox:
             XY: The midpoint.
         """
         return XY.mid(self.min, self.max)
+    
+    def is_point_inside(self, point: XY) -> bool:
+        """Checks whether a point lies inside (or on the boundary of) the bounding box,
+        considering a small tolerance defined by _geom_fuzz.
+        
+        Args:
+            point (XY): The point to test.
 
+        Returns:
+            bool: True if the point is inside or on the edges within tolerance.
+        """
+        return ((self.min.x - _geom_fuzz) <= point.x <= (self.max.x + _geom_fuzz)) and ((self.min.y - _geom_fuzz) <= point.y <= (self.max.y + _geom_fuzz))
 
 class Arc:
     """A class representing a 2D arc defined by a center, radius, and angles."""
@@ -492,8 +503,13 @@ class Line:
         Returns:
             bool: True if the point is on the line segment, False otherwise.
         """
+
+        if self.length <= _geom_fuzz:
+            return self.start.distance(point) <= _geom_fuzz
+        
         if self.is_unbound:
             return self.distance(point) <= _geom_fuzz
+        
         crossproduct = (point.y - self.start.y) * (self.end.x - self.start.x) - (point.x - self.start.x) * (self.end.y - self.start.y)
 
         if abs(crossproduct) > _geom_fuzz:
@@ -864,19 +880,40 @@ class Polyline:
         Returns:
             bool: True if the point is inside, False otherwise.
         """
+
+        if self.num_points < 3:
+            return False
+
+        if not GeomUtils.get_min_max_point(self.points).is_point_inside(point):
+            return False
+        
         if self.is_point_in_edge(point):
             return True
-        points = self.points[::-1] if self.is_clockwise else self.points
+
         inside = False
-        p1x, p1y = points[0]
-        for i in range(1, self.num_points + 1):
-            p2x, p2y = points[i % self.num_points]
-            if point.y > min(p1y, p2y) and point.y <= max(p1y, p2y) and point.x <= max(p1x, p2x):
-                if p1y != p2y:
-                    xints = (point.y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                if p1x == p2x or point.x <= xints:
-                    inside = not inside
-            p1x, p1y = p2x, p2y
+        pts = self.points
+        n = len(pts)
+
+        j = n - 1
+        for i in range(n):
+            pi = pts[i]
+            pj = pts[j]
+
+            condition1 = ((pi.y - _geom_fuzz > point.y) != (pj.y - _geom_fuzz > point.y))
+
+            if pj.y != pi.y:
+                xIntersection = ((pj.x - pi.x) * (point.y - pi.y) /
+                                (pj.y - pi.y)) + pi.x
+            else:
+                xIntersection = pi.x 
+
+            condition2 = (point.x + _geom_fuzz) < xIntersection
+
+            if condition1 and condition2:
+                inside = not inside
+
+            j = i
+
         return inside
 
     def join(self, line: Line | Polyline) -> Polyline:
