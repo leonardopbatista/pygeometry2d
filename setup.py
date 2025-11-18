@@ -4,7 +4,7 @@ with open("README.md", "r", encoding='utf-8') as f:
     readme = f.read()
 
 setup(name='pygeometry2d',
-    version='1.1.3',
+    version='1.2.0',
     license='MIT License',
     author='Leonardo Pires Batista',
     long_description=readme,
